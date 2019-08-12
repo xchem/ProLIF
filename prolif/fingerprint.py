@@ -19,7 +19,6 @@ from os import path
 from rdkit import Chem, DataStructs
 from rdkit import Geometry as rdGeometry
 from math import degrees
-from .prolif import logger
 from .utils import (get_resnumber,
                     getCentroid,
                     isinAngleLimits,
@@ -33,13 +32,11 @@ class Fingerprint:
         interactions=['HBdonor','HBacceptor','cation','anion','FaceToFace','EdgeToFace','hydrophobic']):
         # read parameters from json file
         with open(json_file) as data_file:
-            logger.debug('Reading JSON parameters file from {}'.format(json_file))
             self.prm = json.load(data_file)
         # create aromatic patterns from json file
         self.AROMATIC_PATTERNS = [ Chem.MolFromSmarts(smart) for smart in self.prm["aromatic"]["smarts"]]
         # read interactions to compute
         self.interactions = interactions
-        logger.info('Built fingerprint generator using the following bitstring: {}'.format(' '.join(self.interactions)))
 
 
     def __repr__(self):
@@ -373,33 +370,19 @@ class Fingerprint:
     def generateBitstring(self, ligand, residue):
         """Generate the complete bitstring for the interactions of a residue with a ligand"""
         bitstring = []
-        for interaction in self.interactions:
-            if   interaction == 'HBdonor':
-                bitstring.append(self.hasHBdonor(ligand, residue))
-            elif interaction == 'HBacceptor':
-                bitstring.append(self.hasHBacceptor(ligand, residue))
-            elif interaction == 'XBdonor':
-                bitstring.append(self.hasXBdonor(ligand, residue))
-            elif interaction == 'XBacceptor':
-                bitstring.append(self.hasXBdonor(ligand, residue))
-            elif interaction == 'cation':
-                bitstring.append(self.hasCationic(ligand, residue))
-            elif interaction == 'anion':
-                bitstring.append(self.hasAnionic(ligand, residue))
-            elif interaction == 'FaceToFace':
-                bitstring.append(self.hasFaceToFace(ligand, residue))
-            elif interaction == 'EdgeToFace':
-                bitstring.append(self.hasEdgeToFace(ligand, residue))
-            elif interaction == 'pi-cation':
-                bitstring.append(self.hasPiCation(ligand, residue))
-            elif interaction == 'cation-pi':
-                bitstring.append(self.hasCationPi(ligand, residue))
-            elif interaction == 'hydrophobic':
-                bitstring.append(self.hasHydrophobic(ligand, residue))
-            elif interaction == 'MBdonor':
-                bitstring.append(self.hasMetalDonor(ligand, residue))
-            elif interaction == 'MBacceptor':
-                bitstring.append(self.hasMetalAcceptor(ligand, residue))
+        bitstring.append(self.hasHBdonor(ligand, residue))
+        bitstring.append(self.hasHBacceptor(ligand, residue))
+        bitstring.append(self.hasXBdonor(ligand, residue))
+        bitstring.append(self.hasXBdonor(ligand, residue))
+        bitstring.append(self.hasCationic(ligand, residue))
+        bitstring.append(self.hasAnionic(ligand, residue))
+        bitstring.append(self.hasFaceToFace(ligand, residue))
+        bitstring.append(self.hasEdgeToFace(ligand, residue))
+        bitstring.append(self.hasPiCation(ligand, residue))
+        bitstring.append(self.hasCationPi(ligand, residue))
+        bitstring.append(self.hasHydrophobic(ligand, residue))
+        bitstring.append(self.hasMetalDonor(ligand, residue))
+        bitstring.append(self.hasMetalAcceptor(ligand, residue))
         return ''.join(str(bit) for bit in bitstring)
 
 
@@ -416,3 +399,5 @@ class Fingerprint:
                 i+=1
             IFP += bitstring
         ligand.setIFP(IFP, IFPvector)
+
+        return IFP

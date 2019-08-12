@@ -14,12 +14,11 @@
    limitations under the License.
 """
 
-from rdkit import Chem
 from rdkit import Geometry as rdGeometry
 import os.path
+import pybel
 from .residue import Residue
 from .utils import mol2_reader
-from .prolif import logger
 
 class Protein:
     """Class for a protein"""
@@ -31,17 +30,24 @@ class Protein:
         self.inputFile = inputFile
         fileExtension = os.path.splitext(inputFile)[1]
         if fileExtension.lower() == '.mol2':
-            logger.debug('Reading {}'.format(self.inputFile))
             self.residuesFromMOL2File()
+        elif fileExtension.lower() == '.pdb':
+            for mol in pybel.readfile("pdb", inputFile):
+                # print(dir(mol))
+                outfile = inputFile.replace('.pdb', '_conv.mol2')
+                output = pybel.Outputfile("mol2", outfile, overwrite=True)
+                output.write(mol)
+                output.close()
+                self.inputFile = outfile
         else:
             raise ValueError('{} files are not supported for the protein.'.format(fileExtension[1:].upper()))
-        if not self.residueList:
-            logger.info('Detecting residues within {} Å of the reference molecule'.format(cutoff))
-            self.residueList = self.detectCloseResidues(reference, cutoff)
+
+
+        self.residuesFromMOL2File()
+        # if not self.residueList:
+            # self.residueList = self.detectCloseResidues(reference, cutoff)
         self.cleanResidues()
 
-    def __repr__(self):
-        return self.inputFile
 
     def residuesFromMOL2File(self):
         """Read a MOL2 file and assign each line to an object of class Atom"""
@@ -51,7 +57,6 @@ class Protein:
         for mol in residues_list:
             resname = mol.GetProp('resname')
             self.residues[resname] = Residue(mol)
-        logger.debug('Read {} residues'.format(len(self.residues)))
 
     def detectCloseResidues(self, reference, cutoff=5.0):
         """Detect residues close to a reference ligand"""
@@ -70,13 +75,13 @@ class Protein:
                     if dist <= cutoff:
                         residueList.append(self.residues[residue].resname)
                         break
-        logger.info('Detected {} residues'.format(len(residueList)))
         return residueList
 
     def cleanResidues(self):
         """Cleans the residues of the protein to only keep those in self.residueList"""
         residues = {}
-        for residue in self.residues:
-            if residue in self.residueList:
-                residues[residue] = self.residues[residue]
+        if self.residueList:
+            for residue in self.residues:
+                if residue in self.residueList:
+                    residues[residue] = self.residues[residue]
         self.residues = residues

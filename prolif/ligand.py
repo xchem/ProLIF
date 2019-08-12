@@ -19,34 +19,20 @@ from rdkit import Chem, DataStructs
 from rdkit.Chem import rdMolTransforms, rdmolops
 from rdkit import Geometry as rdGeometry
 from numpy import argmax
-from .prolif import logger
 
 class Ligand:
     """Class for a ligand"""
-    def __init__(self, inputFile):
-        """Initialize the ligand from a file"""
-        self.inputFile = inputFile
-        fileExtension = os.path.splitext(inputFile)[1]
-        if fileExtension.lower() == '.mol2':
-            logger.debug('Reading {}'.format(self.inputFile))
-            self.mol = Chem.MolFromMol2File(inputFile, sanitize=True, removeHs=False)
-        else:
-            raise ValueError('{} files are not supported for the ligand.'.format(fileExtension[1:].upper()))
+    def __init__(self, mol):
+        """Initialize the ligand from an rdkit mol object"""
+        self.mol = mol
         # Set Centroid
         self.coordinates = self.mol.GetConformer().GetPositions()
         self.centroid = rdMolTransforms.ComputeCentroid(self.mol.GetConformer())
-        logger.debug('Set ligand centroid to {:.3f} {:.3f} {:.3f}'.format(*[c for c in self.centroid]))
-
-
-    def __repr__(self):
-        return self.inputFile
-
 
     def setIFP(self, IFP, vector):
         """Set the IFP for the ligand, as a bitstring and vector"""
         self.IFP = IFP
         self.IFPvector = vector
-
 
     def getSimilarity(self, reference, method='tanimoto', alpha=None, beta=None):
         if   method == 'tanimoto':
@@ -56,11 +42,9 @@ class Ligand:
         elif method == 'tversky':
             return DataStructs.TverskySimilarity(reference.IFPvector, self.IFPvector, alpha, beta)
 
-
     def setSimilarity(self, score):
         """Set the value for the similarity score between the ligand and a reference"""
         self.score = score
-
 
     def get_USRlike_atoms(self):
         """Returns 4 rdkit Point3D objects similar to those used in USR:
@@ -93,8 +77,4 @@ class Ligand:
         ftf_idx = argmax(matrix[fct_idx])
         ftf = rdGeometry.Point3D(*coords[ftf_idx])
 
-        logger.debug('ctd={}'.format(list(ctd)))
-        logger.debug('cst={}'.format(list(cst)))
-        logger.debug('fct={}'.format(list(fct)))
-        logger.debug('ftf={}'.format(list(ftf)))
         return ctd, cst, fct, ftf

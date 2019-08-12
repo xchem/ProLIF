@@ -14,9 +14,7 @@
    limitations under the License.
 """
 
-from rdkit import Chem
 from rdkit.Chem import rdMolTransforms
-from .prolif import logger
 
 class Residue:
     """Class for a residue in a protein"""
