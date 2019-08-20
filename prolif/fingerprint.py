@@ -400,4 +400,4 @@ class Fingerprint:
             IFP += bitstring
         ligand.setIFP(IFP, IFPvector)
 
-        return IFP
+        return IFPvector

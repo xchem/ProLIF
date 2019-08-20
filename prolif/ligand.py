@@ -14,7 +14,6 @@
    limitations under the License.
 """
 
-import os.path
 from rdkit import Chem, DataStructs
 from rdkit.Chem import rdMolTransforms, rdmolops
 from rdkit import Geometry as rdGeometry

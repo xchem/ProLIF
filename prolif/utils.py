@@ -16,7 +16,6 @@
 
 import re, textwrap
 from rdkit import Chem
-from .logger import logger
 
 
 def get_resnumber(resname):
